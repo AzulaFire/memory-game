@@ -35,11 +35,11 @@ const MemoryCard: React.FC<MemoryCardProps> = ({
     return (
       <li key={index} className='card-item'>
         <Card
-          className='bg-primary cursor-pointer hover:bg-zinc-800'
+          className='bg-primary cursor-pointer hover:bg-zinc-800 flex items-center justify-center aspect-square'
           onClick={() => handleClick(emoji.name, index)}
         >
-          <CardContent>
-            <div className='text-4xl flex items-center justify-center w-full h-full mt-7'>
+          <CardContent className='flex items-center justify-center p-4'>
+            <div className='text-6xl flex items-center justify-center w-full h-full'>
               {selectedCardEntry || matchedCardEntry
                 ? decodeEntity(emoji.htmlCode[0])
                 : '👻'}
