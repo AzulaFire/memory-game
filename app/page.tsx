@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { useWindowSize } from '@uidotdev/usehooks';
 import Confetti from 'react-confetti';
+import { Button } from '@/components/ui/button';
 
 type Emoji = {
   htmlCode: string;
@@ -83,6 +84,9 @@ const HomePage = () => {
     setSelectedCards([]);
     setMatchedCards([]);
     setIsGameOver(false);
+    setCategory('');
+    setCards(0);
+    setEmojiData([]);
   };
 
   // Async function for starting the game
@@ -152,6 +156,7 @@ const HomePage = () => {
       <h1 className='text-2xl font-bold my-4'>Memory Game</h1>
       <div className='mb-12 inline-flex mx-4 gap-4'>
         <Select
+          value={category} // Ensure reset works
           onValueChange={(value) => {
             handleCategorySelect(value);
           }}
@@ -170,7 +175,9 @@ const HomePage = () => {
             </SelectGroup>
           </SelectContent>
         </Select>
+
         <Select
+          value={cards ? String(cards) : ''} // Ensure reset works
           onValueChange={(value) => {
             handleCardCount(value);
           }}
@@ -190,16 +197,26 @@ const HomePage = () => {
           </SelectContent>
         </Select>
       </div>
+
       <MemoryCard
         handleClick={turnCard}
         emojis={emojiData}
         selectedCards={selectedCards}
         matchedCards={matchedCards}
       />
+
       {isGameOver && width && height && (
-        <Confetti run={isGameOver} width={width - 100} height={height - 100} />
+        <Confetti run={isGameOver} width={width - 20} height={height - 10} />
+      )}
+
+      {isGameOver && (
+        <div className='flex flex-col items-center'>
+          <h1 className='text-6xl font-bold my-8 text-red-600'>You Win!</h1>
+          <Button onClick={resetAll}>Play Again</Button>
+        </div>
       )}
     </main>
   );
 };
+
 export default HomePage;
