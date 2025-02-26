@@ -1,9 +1,17 @@
 'use client';
-import Form from '@/components/Form';
 import MemoryCard from '@/components/MemoryCard';
-import { FormEvent, useState, useEffect } from 'react';
-
-//timestamp: 1:55:03
+import { useState, useEffect } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useWindowSize } from '@uidotdev/usehooks';
+import Confetti from 'react-confetti';
 
 type Emoji = {
   htmlCode: string;
@@ -15,14 +23,35 @@ type Card = {
   index: number;
 };
 
+const categories = [
+  'smileys-and-people',
+  'animals-and-nature',
+  'food-and-drink',
+  'travel-and-places',
+  'activities',
+  'objects',
+  'symbols',
+  'flags',
+];
+
 const HomePage = () => {
-  const [isGameOn, setIsGameOn] = useState<boolean>(false);
+  const { width, height } = useWindowSize();
   const [emojiData, setEmojiData] = useState<Emoji[]>([]);
   const [selectedCards, setSelectedCards] = useState<Card[]>([]);
   const [matchedCards, setMatchedCards] = useState<Card[]>([]);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
+  const [category, setCategory] = useState('');
+  const [cards, setCards] = useState(0);
 
   console.log(isGameOver, matchedCards.length, emojiData.length);
+
+  const handleCategorySelect = (value: string) => {
+    setCategory(value);
+  };
+
+  const handleCardCount = (value: string) => {
+    setCards(Number(value));
+  };
 
   useEffect(() => {
     if (selectedCards.length === 2) {
@@ -42,12 +71,25 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchedCards]);
 
+  useEffect(() => {
+    if (category && cards > 0) {
+      resetAll();
+      startGame(); // Call without an event
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, cards]);
+
+  const resetAll = () => {
+    setSelectedCards([]);
+    setMatchedCards([]);
+    setIsGameOver(false);
+  };
+
   // Async function for starting the game
-  async function startGame(e: FormEvent<HTMLFormElement>) {
+  async function startGame() {
     try {
-      e.preventDefault(); // Prevent form submission
       const response = await fetch(
-        'https://emojihub.yurace.pro/api/all/category/animals-and-nature'
+        'https://emojihub.yurace.pro/api/all/category/' + category
       );
       if (response.ok) {
         // Optionally, handle the data returned by the API
@@ -55,7 +97,7 @@ const HomePage = () => {
 
         const randomData: Emoji[] = [];
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < cards; i++) {
           const randomIndex = Math.floor(Math.random() * data.length);
           if (!randomData.includes(data[randomIndex])) {
             randomData.push(data[randomIndex]);
@@ -83,8 +125,6 @@ const HomePage = () => {
         }
 
         setEmojiData(duplicatedArray);
-
-        setIsGameOn(true); // Set the game as "on"
       } else {
         console.error('Failed to fetch data');
       }
@@ -110,14 +150,54 @@ const HomePage = () => {
   return (
     <main className='flex min-h-screen flex-col items-center mt-6'>
       <h1 className='text-2xl font-bold my-4'>Memory Game</h1>
-      {!isGameOn && <Form handleSubmit={startGame} />}
-      {isGameOn && (
-        <MemoryCard
-          handleClick={turnCard}
-          emojis={emojiData}
-          selectedCards={selectedCards}
-          matchedCards={matchedCards}
-        />
+      <div className='mb-12 inline-flex mx-4 gap-4'>
+        <Select
+          onValueChange={(value) => {
+            handleCategorySelect(value);
+          }}
+        >
+          <SelectTrigger className='w-[180px]'>
+            <SelectValue placeholder='Select a Category' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Categories</SelectLabel>
+              {categories.map((category: string) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          onValueChange={(value) => {
+            handleCardCount(value);
+          }}
+        >
+          <SelectTrigger className='w-[180px]'>
+            <SelectValue placeholder='Number of Cards' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Cards</SelectLabel>
+              {[5, 10, 20, 30, 50].map((count: number) => (
+                <SelectItem key={count} value={String(count)}>
+                  {count}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+      <MemoryCard
+        handleClick={turnCard}
+        emojis={emojiData}
+        selectedCards={selectedCards}
+        matchedCards={matchedCards}
+      />
+      {isGameOver && width && height && (
+        <Confetti run={isGameOver} width={width - 100} height={height - 100} />
       )}
     </main>
   );
